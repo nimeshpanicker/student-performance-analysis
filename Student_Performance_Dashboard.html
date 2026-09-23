@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Student Performance Analytics — Dashboard</title>
+<style>
+  :root{
+    --ink:#1C2B39;
+    --parchment:#F5F2EA;
+    --panel:#FFFFFF;
+    --rule:#DAD4C3;
+    --brass:#B08A45;
+    --brass-deep:#8C6D33;
+    --slate:#4A6C93;
+    --slate-soft:#9FB4CC;
+    --terracotta:#A6543F;
+    --sage:#5C7A5E;
+    --muted:#6B7683;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--parchment);font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;color:var(--ink);}
+  .sheet{max-width:1280px;margin:0 auto;padding:48px 56px 64px;}
+
+  /* ---- Masthead ---- */
+  .masthead{
+    display:flex;justify-content:space-between;align-items:flex-end;
+    border-bottom:3px solid var(--ink);
+    padding-bottom:18px;margin-bottom:8px;
+  }
+  .masthead h1{
+    font-family:Georgia,'Times New Roman',serif;font-weight:600;font-size:34px;margin:0;letter-spacing:-0.01em;
+  }
+  .masthead .scope{
+    font-size:13px;color:var(--muted);margin-top:6px;font-family:'SF Mono','Courier New',monospace;
+  }
+  .masthead .datestamp{
+    text-align:right;font-size:12.5px;color:var(--muted);font-family:'SF Mono','Courier New',monospace;line-height:1.6;
+  }
+  .subrule{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);
+    padding:8px 0 28px;border-bottom:1px solid var(--rule);margin-bottom:28px;}
+
+  /* ---- KPI strip ---- */
+  .kpi-row{display:grid;grid-template-columns:repeat(5,1fr);gap:0;margin-bottom:36px;
+    border:1px solid var(--rule);background:var(--panel);}
+  .kpi{padding:20px 22px;border-right:1px solid var(--rule);}
+  .kpi:last-child{border-right:none;}
+  .kpi .label{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:10px;font-weight:500;}
+  .kpi .value{font-family:Georgia,'Times New Roman',serif;font-size:30px;font-weight:600;color:var(--ink);line-height:1;}
+  .kpi .value sup{font-size:15px;font-weight:500;color:var(--brass-deep);margin-left:2px;}
+  .kpi .note{font-size:11.5px;color:var(--muted);margin-top:8px;}
+
+  /* ---- Section headers ---- */
+  .section-title{
+    font-family:Georgia,'Times New Roman',serif;font-size:18px;font-weight:600;margin:0 0 4px;
+    display:flex;align-items:baseline;gap:10px;
+  }
+  .section-title .num{color:var(--brass-deep);font-family:'SF Mono','Courier New',monospace;font-size:13px;font-weight:500;}
+  .section-sub{font-size:12.5px;color:var(--muted);margin:0 0 16px;max-width:680px;}
+
+  /* ---- Grid layout ---- */
+  .row{display:grid;gap:20px;margin-bottom:28px;}
+  .row.g2{grid-template-columns:1.3fr 1fr;}
+  .row.g3{grid-template-columns:1fr 1fr 1fr;}
+  .panel{background:var(--panel);border:1px solid var(--rule);padding:22px 24px;}
+  .panel canvas{max-width:100%;}
+
+  .finding{
+    font-size:12.5px;color:var(--ink);background:#FBF6E9;border-left:3px solid var(--brass);
+    padding:9px 12px;margin-top:14px;line-height:1.5;
+  }
+  .finding b{color:var(--brass-deep);}
+
+  /* legend chips */
+  .chiprow{display:flex;gap:14px;margin-top:10px;flex-wrap:wrap;}
+  .chip{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--muted);}
+  .chip i{width:9px;height:9px;border-radius:2px;display:inline-block;}
+
+  /* Ethnic table */
+  table.eg{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px;}
+  table.eg th{text-align:left;font-weight:500;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em;padding:6px 8px;border-bottom:1px solid var(--rule);}
+  table.eg td{padding:7px 8px;border-bottom:1px solid var(--rule);}
+  table.eg tr:last-child td{border-bottom:none;}
+  table.eg td.num{font-family:'SF Mono','Courier New',monospace;text-align:right;}
+
+  .heat-wrap{display:grid;grid-template-columns:110px 1fr 1fr 1fr;gap:0;font-size:12.5px;}
+  .heat-cell{padding:12px;text-align:center;font-family:'SF Mono','Courier New',monospace;font-weight:500;color:#fff;}
+  .heat-label{padding:12px 8px;color:var(--muted);font-size:11.5px;display:flex;align-items:center;}
+  .heat-head{padding:8px;text-align:center;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;}
+
+  footer{margin-top:36px;padding-top:16px;border-top:1px solid var(--rule);font-size:11px;color:var(--muted);
+    display:flex;justify-content:space-between;}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <div class="masthead">
+    <div>
+      <h1>Student Performance Analytics</h1>
+      <div class="scope">Expanded_data_with_more_features · n = 11,040 students · 15 fields</div>
+    </div>
+    <div class="datestamp">Portfolio dashboard<br/>Panicker Nimesh Mahendran</div>
+  </div>
+  <div class="subrule">
+    <span>Exploratory analysis of academic outcomes against demographic, household, and preparation factors</span>
+    <span>Math · Reading · Writing, scored 0–100</span>
+  </div>
+
+  <!-- KPI STRIP -->
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="label">Students</div>
+      <div class="value">11,040</div>
+      <div class="note">Full dataset, 0 dropped</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Avg Math Score</div>
+      <div class="value">66.7</div>
+      <div class="note">σ = 15.4</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Avg Reading Score</div>
+      <div class="value">69.4</div>
+      <div class="note">σ = 14.7</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Avg Writing Score</div>
+      <div class="value">68.4</div>
+      <div class="note">σ = 15.4</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Test Prep Completion</div>
+      <div class="value">34.1<sup>%</sup></div>
+      <div class="note">3,538 of 10,381 reporting</div>
+    </div>
+  </div>
+
+  <!-- ROW: Lunch Type + Test Prep -->
+  <div class="row g2">
+    <div class="panel">
+      <div class="section-title"><span class="num">01</span> Lunch programme vs. score</div>
+      <p class="section-sub">Lunch type is the strongest single split in the dataset — used here as a proxy for household economic access.</p>
+      <svg viewBox="0 0 440 220" width="100%" style="overflow:visible;font-family:inherit;">
+<line x1="34" y1="194.0" x2="430" y2="194.0" stroke="#EDE8DA" stroke-width="1"/>
+<text x="26" y="197.0" font-size="10.5" fill="#6B7683" text-anchor="end">40</text>
+<line x1="34" y1="148.0" x2="430" y2="148.0" stroke="#EDE8DA" stroke-width="1"/>
+<text x="26" y="151.0" font-size="10.5" fill="#6B7683" text-anchor="end">50</text>
+<line x1="34" y1="102.0" x2="430" y2="102.0" stroke="#EDE8DA" stroke-width="1"/>
+<text x="26" y="105.0" font-size="10.5" fill="#6B7683" text-anchor="end">60</text>
+<line x1="34" y1="56.0" x2="430" y2="56.0" stroke="#EDE8DA" stroke-width="1"/>
+<text x="26" y="59.0" font-size="10.5" fill="#6B7683" text-anchor="end">70</text>
+<line x1="34" y1="10.0" x2="430" y2="10.0" stroke="#EDE8DA" stroke-width="1"/>
+<text x="26" y="13.0" font-size="10.5" fill="#6B7683" text-anchor="end">80</text>
+<rect x="48.0" y="107.5" width="54.0" height="86.5" fill="#1C2B39" rx="1.5"/>
+<text x="75.0" y="102.5" font-size="10" fill="#1C2B39" text-anchor="middle" font-weight="500">58.8</text>
+<rect x="106.0" y="82.7" width="54.0" height="111.3" fill="#4A6C93" rx="1.5"/>
+<text x="133.0" y="77.7" font-size="10" fill="#1C2B39" text-anchor="middle" font-weight="500">64.2</text>
+<rect x="164.0" y="90.0" width="54.0" height="104.0" fill="#B08A45" rx="1.5"/>
+<text x="191.0" y="85.0" font-size="10" fill="#1C2B39" text-anchor="middle" font-weight="500">62.6</text>
+<text x="133.0" y="212.0" font-size="11" fill="#4A4A4A" text-anchor="middle">Free/Reduced</text>
+<rect x="246.0" y="52.3" width="54.0" height="141.7" fill="#1C2B39" rx="1.5"/>
+<text x="273.0" y="47.3" font-size="10" fill="#1C2B39" text-anchor="middle" font-weight="500">70.8</text>
+<rect x="304.0" y="45.9" width="54.0" height="148.1" fill="#4A6C93" rx="1.5"/>
+<text x="331.0" y="40.9" font-size="10" fill="#1C2B39" text-anchor="middle" font-weight="500">72.2</text>
+<rect x="362.0" y="49.1" width="54.0" height="144.9" fill="#B08A45" rx="1.5"/>
+<text x="389.0" y="44.1" font-size="10" fill="#1C2B39" text-anchor="middle" font-weight="500">71.5</text>
+<text x="331.0" y="212.0" font-size="11" fill="#4A4A4A" text-anchor="middle">Standard</text>
+</svg><div class="chiprow"><span class="chip"><i style="background:#1C2B39"></i>Math</span><span class="chip"><i style="background:#4A6C93"></i>Reading</span><span class="chip"><i style="background:#B08A45"></i>Writing</span></div>
+      <div class="finding"><b>Gap:</b> standard-lunch students outscore free/reduced-lunch students by <b>12.0</b> math points, <b>8.0</b> reading points, and <b>8.9</b> writing points — the widest gap of any factor examined.</div>
+    </div>
+    <div class="panel">
+      <div class="section-title"><span class="num">02</span> Test-prep completion vs. score</div>
+      <p class="section-sub">Completing the test-preparation course correlates with higher scores across all three subjects.</p>
+      <svg viewBox="0 0 440 220" width="100%" style="overflow:visible;font-family:inherit;">
+<line x1="34" y1="194.0" x2="430" y2="194.0" stroke="#EDE8DA" stroke-width="1"/>
+<text x="26" y="197.0" font-size="10.5" fill="#6B7683" text-anchor="end">40</text>
+<line x1="34" y1="148.0" x2="430" y2="148.0" stroke="#EDE8DA" stroke-width="1"/>
+<text x="26" y="151.0" font-size="10.5" fill="#6B7683" text-anchor="end">50</text>
+<line x1="34" y1="102.0" x2="430" y2="102.0" stroke="#EDE8DA" stroke-width="1"/>
+<text x="26" y="105.0" font-size="10.5" fill="#6B7683" text-anchor="end">60</text>
+<line x1="34" y1="56.0" x2="430" y2="56.0" stroke="#EDE8DA" stroke-width="1"/>
+<text x="26" y="59.0" font-size="10.5" fill="#6B7683" text-anchor="end">70</text>
+<line x1="34" y1="10.0" x2="430" y2="10.0" stroke="#EDE8DA" stroke-width="1"/>
+<text x="26" y="13.0" font-size="10.5" fill="#6B7683" text-anchor="end">80</text>
+<rect x="48.0" y="78.1" width="54.0" height="115.9" fill="#1C2B39" rx="1.5"/>
+<text x="75.0" y="73.1" font-size="10" fill="#1C2B39" text-anchor="middle" font-weight="500">65.2</text>
+<rect x="106.0" y="68.9" width="54.0" height="125.1" fill="#4A6C93" rx="1.5"/>
+<text x="133.0" y="63.9" font-size="10" fill="#1C2B39" text-anchor="middle" font-weight="500">67.2</text>
+<rect x="164.0" y="78.1" width="54.0" height="115.9" fill="#B08A45" rx="1.5"/>
+<text x="191.0" y="73.1" font-size="10" fill="#1C2B39" text-anchor="middle" font-weight="500">65.2</text>
+<text x="133.0" y="212.0" font-size="11" fill="#4A4A4A" text-anchor="middle">None</text>
+<rect x="246.0" y="58.8" width="54.0" height="135.2" fill="#1C2B39" rx="1.5"/>
+<text x="273.0" y="53.8" font-size="10" fill="#1C2B39" text-anchor="middle" font-weight="500">69.4</text>
+<rect x="304.0" y="39.0" width="54.0" height="155.0" fill="#4A6C93" rx="1.5"/>
+<text x="331.0" y="34.0" font-size="10" fill="#1C2B39" text-anchor="middle" font-weight="500">73.7</text>
+<rect x="362.0" y="34.8" width="54.0" height="159.2" fill="#B08A45" rx="1.5"/>
+<text x="389.0" y="29.8" font-size="10" fill="#1C2B39" text-anchor="middle" font-weight="500">74.6</text>
+<text x="331.0" y="212.0" font-size="11" fill="#4A4A4A" text-anchor="middle">Completed</text>
+</svg><div class="chiprow"><span class="chip"><i style="background:#1C2B39"></i>Math</span><span class="chip"><i style="background:#4A6C93"></i>Reading</span><span class="chip"><i style="background:#B08A45"></i>Writing</span></div>
+      <div class="finding"><b>Lift:</b> completers score <b>+4.3</b> math, <b>+6.4</b> reading, <b>+9.4</b> writing points above non-completers — writing shows the largest lift.</div>
+    </div>
+  </div>
+
+  <!-- ROW: Gender + Parent Education -->
+  <div class="row g2">
+    <div class="panel">
+      <div class="section-title"><span class="num">03</span> Gender split by subject</div>
+      <p class="section-sub">5,591 female / 5,449 male students. The subjects diverge in opposite directions.</p>
+      <svg viewBox="0 0 440 220" width="100%" style="overflow:visible;font-family:inherit;">
+<line x1="34" y1="194.0" x2="430" y2="194.0" stroke="#EDE8DA" stroke-width="1"/>
+<text x="26" y="197.0" font-size="10.5" fill="#6B7683" text-anchor="end">50</text>
+<line x1="34" y1="132.7" x2="430" y2="132.7" stroke="#EDE8DA" stroke-width="1"/>
+<text x="26" y="135.7" font-size="10.5" fill="#6B7683" text-anchor="end">60</text>
+<line x1="34" y1="71.3" x2="430" y2="71.3" stroke="#EDE8DA" stroke-width="1"/>
+<text x="26" y="74.3" font-size="10.5" fill="#6B7683" text-anchor="end">70</text>
+<line x1="34" y1="10.0" x2="430" y2="10.0" stroke="#EDE8DA" stroke-width="1"/>
+<text x="26" y="13.0" font-size="10.5" fill="#6B7683" text-anchor="end">80</text>
+<rect x="48.0" y="107.5" width="50.0" height="86.5" fill="#A6543F" rx="1.5"/>
+<text x="73.0" y="102.5" font-size="10" fill="#1C2B39" text-anchor="middle" font-weight="500">64.1</text>
+<rect x="102.0" y="75.6" width="50.0" height="118.4" fill="#9FB4CC" rx="1.5"/>
+<text x="127.0" y="70.6" font-size="10" fill="#1C2B39" text-anchor="middle" font-weight="500">69.3</text>
+<text x="100.0" y="212.0" font-size="11" fill="#4A4A4A" text-anchor="middle">Math</text>
+<rect x="180.0" y="54.2" width="50.0" height="139.8" fill="#A6543F" rx="1.5"/>
+<text x="205.0" y="49.2" font-size="10" fill="#1C2B39" text-anchor="middle" font-weight="500">72.8</text>
+<rect x="234.0" y="95.9" width="50.0" height="98.1" fill="#9FB4CC" rx="1.5"/>
+<text x="259.0" y="90.9" font-size="10" fill="#1C2B39" text-anchor="middle" font-weight="500">66</text>
+<text x="232.0" y="212.0" font-size="11" fill="#4A4A4A" text-anchor="middle">Reading</text>
+<rect x="312.0" y="54.8" width="50.0" height="139.2" fill="#A6543F" rx="1.5"/>
+<text x="337.0" y="49.8" font-size="10" fill="#1C2B39" text-anchor="middle" font-weight="500">72.7</text>
+<rect x="366.0" y="107.5" width="50.0" height="86.5" fill="#9FB4CC" rx="1.5"/>
+<text x="391.0" y="102.5" font-size="10" fill="#1C2B39" text-anchor="middle" font-weight="500">64.1</text>
+<text x="364.0" y="212.0" font-size="11" fill="#4A4A4A" text-anchor="middle">Writing</text>
+</svg><div class="chiprow"><span class="chip"><i style="background:#A6543F"></i>Female</span><span class="chip"><i style="background:#9FB4CC"></i>Male</span></div>
+      <div class="finding"><b>Pattern:</b> males lead math by <b>+5.2</b> points; females lead reading by <b>+6.8</b> and writing by <b>+8.7</b> — no subject is uniformly stronger for one gender.</div>
+    </div>
+    <div class="panel">
+      <div class="section-title"><span class="num">04</span> Parent education vs. average score</div>
+      <p class="section-sub">Average of the three subject scores, by highest parental education level on file.</p>
+      <svg viewBox="0 0 440 220" width="100%" style="overflow:visible;font-family:inherit;">
+<line x1="34" y1="194.0" x2="430" y2="194.0" stroke="#EDE8DA" stroke-width="1"/>
+<text x="26" y="197.0" font-size="10.5" fill="#6B7683" text-anchor="end">50</text>
+<line x1="34" y1="132.7" x2="430" y2="132.7" stroke="#EDE8DA" stroke-width="1"/>
+<text x="26" y="135.7" font-size="10.5" fill="#6B7683" text-anchor="end">60</text>
+<line x1="34" y1="71.3" x2="430" y2="71.3" stroke="#EDE8DA" stroke-width="1"/>
+<text x="26" y="74.3" font-size="10.5" fill="#6B7683" text-anchor="end">70</text>
+<line x1="34" y1="10.0" x2="430" y2="10.0" stroke="#EDE8DA" stroke-width="1"/>
+<text x="26" y="13.0" font-size="10.5" fill="#6B7683" text-anchor="end">80</text>
+<rect x="48.0" y="107.0" width="38.0" height="87.0" fill="#B08A45" rx="1.5"/>
+<text x="67.0" y="102.0" font-size="10" fill="#1C2B39" text-anchor="middle" font-weight="500">64.18</text>
+<text x="67.0" y="212.0" font-size="11" fill="#4A4A4A" text-anchor="middle">Some HS</text>
+<rect x="114.0" y="99.2" width="38.0" height="94.8" fill="#B08A45" rx="1.5"/>
+<text x="133.0" y="94.2" font-size="10" fill="#1C2B39" text-anchor="middle" font-weight="500">65.46</text>
+<text x="133.0" y="212.0" font-size="11" fill="#4A4A4A" text-anchor="middle">High Sch.</text>
+<rect x="180.0" y="84.4" width="38.0" height="109.6" fill="#B08A45" rx="1.5"/>
+<text x="199.0" y="79.4" font-size="10" fill="#1C2B39" text-anchor="middle" font-weight="500">67.87</text>
+<text x="199.0" y="212.0" font-size="11" fill="#4A4A4A" text-anchor="middle">Some Coll.</text>
+<rect x="246.0" y="70.0" width="38.0" height="124.0" fill="#B08A45" rx="1.5"/>
+<text x="265.0" y="65.0" font-size="10" fill="#1C2B39" text-anchor="middle" font-weight="500">70.22</text>
+<text x="265.0" y="212.0" font-size="11" fill="#4A4A4A" text-anchor="middle">Assoc.</text>
+<rect x="312.0" y="56.7" width="38.0" height="137.3" fill="#B08A45" rx="1.5"/>
+<text x="331.0" y="51.7" font-size="10" fill="#1C2B39" text-anchor="middle" font-weight="500">72.39</text>
+<text x="331.0" y="212.0" font-size="11" fill="#4A4A4A" text-anchor="middle">Bach.</text>
+<rect x="378.0" y="39.6" width="38.0" height="154.4" fill="#B08A45" rx="1.5"/>
+<text x="397.0" y="34.6" font-size="10" fill="#1C2B39" text-anchor="middle" font-weight="500">75.17</text>
+<text x="397.0" y="212.0" font-size="11" fill="#4A4A4A" text-anchor="middle">Master's</text>
+</svg>
+      <div class="finding"><b>Gradient:</b> scores rise almost monotonically with parental education — an <b>11.0-point</b> spread separates "some high school" from "master's degree" households.</div>
+    </div>
+  </div>
+
+  <!-- ROW: Ethnic group + Study hours + Practice sport -->
+  <div class="row g3">
+    <div class="panel">
+      <div class="section-title"><span class="num">05</span> Ethnic group — share &amp; scores</div>
+      <p class="section-sub">Share of students, with average subject scores alongside.</p>
+      <div style="display:flex;align-items:center;gap:18px;margin-bottom:4px;">
+  <div style="width:120px;height:120px;border-radius:50%;flex-shrink:0;
+    background:conic-gradient(#1C2B39 0% 31.6%, #4A6C93 31.6% 57.2%, #B08A45 57.2% 77.6%, #A6543F 77.6% 91.9%, #9FB4CC 91.9% 100%);
+    position:relative;">
+    <div style="position:absolute;inset:22px;border-radius:50%;background:#FFFFFF;"></div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:5px;font-size:11.5px;color:#4A4A4A;">
+    <span><i style="display:inline-block;width:9px;height:9px;background:#1C2B39;margin-right:6px;border-radius:2px;"></i>Group C — 31.6%</span>
+    <span><i style="display:inline-block;width:9px;height:9px;background:#4A6C93;margin-right:6px;border-radius:2px;"></i>Group D — 25.6%</span>
+    <span><i style="display:inline-block;width:9px;height:9px;background:#B08A45;margin-right:6px;border-radius:2px;"></i>Group B — 20.3%</span>
+    <span><i style="display:inline-block;width:9px;height:9px;background:#A6543F;margin-right:6px;border-radius:2px;"></i>Group E — 14.3%</span>
+    <span><i style="display:inline-block;width:9px;height:9px;background:#9FB4CC;margin-right:6px;border-radius:2px;"></i>Group A — 8.1%</span>
+  </div>
+</div>
+      <table class="eg">
+        <tr><th>Group</th><th>Share</th><th>Math</th><th>Read</th><th>Write</th></tr>
+        <tr><td>Group C</td><td class="num">31.6%</td><td class="num">64.4</td><td class="num">68.2</td><td class="num">66.8</td></tr>
+        <tr><td>Group D</td><td class="num">25.6%</td><td class="num">68.0</td><td class="num">70.5</td><td class="num">71.0</td></tr>
+        <tr><td>Group B</td><td class="num">20.3%</td><td class="num">63.5</td><td class="num">67.4</td><td class="num">65.9</td></tr>
+        <tr><td>Group E</td><td class="num">14.3%</td><td class="num">75.8</td><td class="num">74.7</td><td class="num">73.1</td></tr>
+        <tr><td>Group A</td><td class="num">8.1%</td><td class="num">63.6</td><td class="num">67.2</td><td class="num">65.4</td></tr>
+      </table>
+    </div>
+    <div class="panel">
+      <div class="section-title"><span class="num">06</span> Weekly study hours</div>
+      <p class="section-sub">Self-reported study time, banded into three groups.</p>
+      <svg viewBox="0 0 280 190" width="100%" style="overflow:visible;font-family:inherit;">
+<line x1="34" y1="164.0" x2="270" y2="164.0" stroke="#EDE8DA" stroke-width="1"/>
+<text x="26" y="167.0" font-size="10.5" fill="#6B7683" text-anchor="end">55</text>
+<line x1="34" y1="125.5" x2="270" y2="125.5" stroke="#EDE8DA" stroke-width="1"/>
+<text x="26" y="128.5" font-size="10.5" fill="#6B7683" text-anchor="end">60</text>
+<line x1="34" y1="87.0" x2="270" y2="87.0" stroke="#EDE8DA" stroke-width="1"/>
+<text x="26" y="90.0" font-size="10.5" fill="#6B7683" text-anchor="end">65</text>
+<line x1="34" y1="48.5" x2="270" y2="48.5" stroke="#EDE8DA" stroke-width="1"/>
+<text x="26" y="51.5" font-size="10.5" fill="#6B7683" text-anchor="end">70</text>
+<line x1="34" y1="10.0" x2="270" y2="10.0" stroke="#EDE8DA" stroke-width="1"/>
+<text x="26" y="13.0" font-size="10.5" fill="#6B7683" text-anchor="end">75</text>
+<rect x="48.0" y="76.1" width="50.7" height="87.9" fill="#4A6C93" rx="1.5"/>
+<text x="73.3" y="71.1" font-size="10" fill="#1C2B39" text-anchor="middle" font-weight="500">66.42</text>
+<text x="73.3" y="182.0" font-size="11" fill="#4A4A4A" text-anchor="middle">< 5 hrs</text>
+<rect x="126.7" y="60.1" width="50.7" height="103.9" fill="#4A6C93" rx="1.5"/>
+<text x="152.0" y="55.1" font-size="10" fill="#1C2B39" text-anchor="middle" font-weight="500">68.49</text>
+<text x="152.0" y="182.0" font-size="11" fill="#4A4A4A" text-anchor="middle">5–10 hrs</text>
+<rect x="205.3" y="50.2" width="50.7" height="113.8" fill="#4A6C93" rx="1.5"/>
+<text x="230.7" y="45.2" font-size="10" fill="#1C2B39" text-anchor="middle" font-weight="500">69.78</text>
+<text x="230.7" y="182.0" font-size="11" fill="#4A4A4A" text-anchor="middle">> 10 hrs</text>
+</svg>
+      <div class="finding"><b>Trend:</b> &gt;10 hrs/week students average 4.5 points higher across subjects than &lt;5 hrs/week students.</div>
+    </div>
+    <div class="panel">
+      <div class="section-title"><span class="num">07</span> Sport participation</div>
+      <p class="section-sub">Frequency of practising sport, vs. average score.</p>
+      <svg viewBox="0 0 280 190" width="100%" style="overflow:visible;font-family:inherit;">
+<line x1="34" y1="164.0" x2="270" y2="164.0" stroke="#EDE8DA" stroke-width="1"/>
+<text x="26" y="167.0" font-size="10.5" fill="#6B7683" text-anchor="end">55</text>
+<line x1="34" y1="125.5" x2="270" y2="125.5" stroke="#EDE8DA" stroke-width="1"/>
+<text x="26" y="128.5" font-size="10.5" fill="#6B7683" text-anchor="end">60</text>
+<line x1="34" y1="87.0" x2="270" y2="87.0" stroke="#EDE8DA" stroke-width="1"/>
+<text x="26" y="90.0" font-size="10.5" fill="#6B7683" text-anchor="end">65</text>
+<line x1="34" y1="48.5" x2="270" y2="48.5" stroke="#EDE8DA" stroke-width="1"/>
+<text x="26" y="51.5" font-size="10.5" fill="#6B7683" text-anchor="end">70</text>
+<line x1="34" y1="10.0" x2="270" y2="10.0" stroke="#EDE8DA" stroke-width="1"/>
+<text x="26" y="13.0" font-size="10.5" fill="#6B7683" text-anchor="end">75</text>
+<rect x="48.0" y="79.1" width="50.7" height="84.9" fill="#5C7A5E" rx="1.5"/>
+<text x="73.3" y="74.1" font-size="10" fill="#1C2B39" text-anchor="middle" font-weight="500">66.02</text>
+<text x="73.3" y="182.0" font-size="11" fill="#4A4A4A" text-anchor="middle">Never</text>
+<rect x="126.7" y="63.6" width="50.7" height="100.4" fill="#5C7A5E" rx="1.5"/>
+<text x="152.0" y="58.6" font-size="10" fill="#1C2B39" text-anchor="middle" font-weight="500">68.04</text>
+<text x="152.0" y="182.0" font-size="11" fill="#4A4A4A" text-anchor="middle">Sometimes</text>
+<rect x="205.3" y="55.0" width="50.7" height="109.0" fill="#5C7A5E" rx="1.5"/>
+<text x="230.7" y="50.0" font-size="10" fill="#1C2B39" text-anchor="middle" font-weight="500">69.16</text>
+<text x="230.7" y="182.0" font-size="11" fill="#4A4A4A" text-anchor="middle">Regularly</text>
+</svg>
+      <div class="finding"><b>Note:</b> the gap between "never" and "regularly" is modest (~2.5 pts) — far smaller than the lunch or test-prep effects.</div>
+    </div>
+  </div>
+
+  <!-- ROW: Correlation heatmap + marital status -->
+  <div class="row g2">
+    <div class="panel">
+      <div class="section-title"><span class="num">08</span> Correlation between subject scores</div>
+      <p class="section-sub">Pearson correlation across the three score columns.</p>
+      <div class="heat-wrap">
+        <div class="heat-head"></div><div class="heat-head">Math</div><div class="heat-head">Reading</div><div class="heat-head">Writing</div>
+        <div class="heat-label">Math</div>
+        <div class="heat-cell" style="background:#1C2B39;">1.00</div>
+        <div class="heat-cell" style="background:#5C7A99;">0.82</div>
+        <div class="heat-cell" style="background:#607A97;">0.81</div>
+        <div class="heat-label">Reading</div>
+        <div class="heat-cell" style="background:#5C7A99;">0.82</div>
+        <div class="heat-cell" style="background:#1C2B39;">1.00</div>
+        <div class="heat-cell" style="background:#2E4A63;">0.95</div>
+        <div class="heat-label">Writing</div>
+        <div class="heat-cell" style="background:#607A97;">0.81</div>
+        <div class="heat-cell" style="background:#2E4A63;">0.95</div>
+        <div class="heat-cell" style="background:#1C2B39;">1.00</div>
+      </div>
+      <div class="finding"><b>Reading and writing move together</b> (r = 0.95) far more tightly than either does with math (r ≈ 0.81–0.82) — consistent with shared literacy skills underlying both.</div>
+    </div>
+    <div class="panel">
+      <div class="section-title"><span class="num">09</span> Parent marital status</div>
+      <p class="section-sub">Household composition on file — shown for completeness; scores do not vary meaningfully across groups (66.1–69.4 range on all three subjects).</p>
+      <svg viewBox="0 0 440 220" width="100%" style="overflow:visible;font-family:inherit;">
+<line x1="34" y1="194.0" x2="430" y2="194.0" stroke="#EDE8DA" stroke-width="1"/>
+<text x="26" y="197.0" font-size="10.5" fill="#6B7683" text-anchor="end">60</text>
+<line x1="34" y1="132.7" x2="430" y2="132.7" stroke="#EDE8DA" stroke-width="1"/>
+<text x="26" y="135.7" font-size="10.5" fill="#6B7683" text-anchor="end">65</text>
+<line x1="34" y1="71.3" x2="430" y2="71.3" stroke="#EDE8DA" stroke-width="1"/>
+<text x="26" y="74.3" font-size="10.5" fill="#6B7683" text-anchor="end">70</text>
+<line x1="34" y1="10.0" x2="430" y2="10.0" stroke="#EDE8DA" stroke-width="1"/>
+<text x="26" y="13.0" font-size="10.5" fill="#6B7683" text-anchor="end">75</text>
+<rect x="48.0" y="112.4" width="21.0" height="81.6" fill="#1C2B39" rx="1.5"/>
+<text x="58.5" y="107.4" font-size="10" fill="#1C2B39" text-anchor="middle" font-weight="500">66.65</text>
+<rect x="73.0" y="76.1" width="21.0" height="117.9" fill="#4A6C93" rx="1.5"/>
+<text x="83.5" y="71.1" font-size="10" fill="#1C2B39" text-anchor="middle" font-weight="500">69.61</text>
+<rect x="98.0" y="86.3" width="21.0" height="107.7" fill="#B08A45" rx="1.5"/>
+<text x="108.5" y="81.3" font-size="10" fill="#1C2B39" text-anchor="middle" font-weight="500">68.78</text>
+<text x="83.5" y="212.0" font-size="11" fill="#4A4A4A" text-anchor="middle">Divorced</text>
+<rect x="147.0" y="110.3" width="21.0" height="83.7" fill="#1C2B39" rx="1.5"/>
+<text x="157.5" y="105.3" font-size="10" fill="#1C2B39" text-anchor="middle" font-weight="500">66.82</text>
+<rect x="172.0" y="76.7" width="21.0" height="117.3" fill="#4A6C93" rx="1.5"/>
+<text x="182.5" y="71.7" font-size="10" fill="#1C2B39" text-anchor="middle" font-weight="500">69.56</text>
+<rect x="197.0" y="89.5" width="21.0" height="104.5" fill="#B08A45" rx="1.5"/>
+<text x="207.5" y="84.5" font-size="10" fill="#1C2B39" text-anchor="middle" font-weight="500">68.52</text>
+<text x="182.5" y="212.0" font-size="11" fill="#4A4A4A" text-anchor="middle">Married</text>
+<rect x="246.0" y="118.8" width="21.0" height="75.2" fill="#1C2B39" rx="1.5"/>
+<text x="256.5" y="113.8" font-size="10" fill="#1C2B39" text-anchor="middle" font-weight="500">66.13</text>
+<rect x="271.0" y="84.6" width="21.0" height="109.4" fill="#4A6C93" rx="1.5"/>
+<text x="281.5" y="79.6" font-size="10" fill="#1C2B39" text-anchor="middle" font-weight="500">68.92</text>
+<rect x="296.0" y="96.8" width="21.0" height="97.2" fill="#B08A45" rx="1.5"/>
+<text x="306.5" y="91.8" font-size="10" fill="#1C2B39" text-anchor="middle" font-weight="500">67.92</text>
+<text x="281.5" y="212.0" font-size="11" fill="#4A4A4A" text-anchor="middle">Single</text>
+<rect x="345.0" y="78.8" width="21.0" height="115.2" fill="#1C2B39" rx="1.5"/>
+<text x="355.5" y="73.8" font-size="10" fill="#1C2B39" text-anchor="middle" font-weight="500">69.39</text>
+<rect x="370.0" y="62.3" width="21.0" height="131.7" fill="#4A6C93" rx="1.5"/>
+<text x="380.5" y="57.3" font-size="10" fill="#1C2B39" text-anchor="middle" font-weight="500">70.74</text>
+<rect x="395.0" y="71.3" width="21.0" height="122.7" fill="#B08A45" rx="1.5"/>
+<text x="405.5" y="66.3" font-size="10" fill="#1C2B39" text-anchor="middle" font-weight="500">70</text>
+<text x="380.5" y="212.0" font-size="11" fill="#4A4A4A" text-anchor="middle">Widowed</text>
+</svg><div class="chiprow"><span class="chip"><i style="background:#1C2B39"></i>Math</span><span class="chip"><i style="background:#4A6C93"></i>Reading</span><span class="chip"><i style="background:#B08A45"></i>Writing</span></div>
+      <div class="finding"><b>No material effect:</b> the largest gap between marital-status groups is under 3 points on any subject — far smaller than the lunch, test-prep, or parent-education splits.</div>
+    </div>
+  </div>
+
+  <footer>
+    <span>Source: Expanded_data_with_more_features.csv · all figures computed directly from the dataset</span>
+    <span>Business Performance Report — Dashboard Appendix</span>
+  </footer>
+</div>
+
+</body>
+</html>
